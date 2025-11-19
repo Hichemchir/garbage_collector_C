@@ -33,7 +33,7 @@ void mark(vm_t *vm) {
 }
 
 void trace(vm_t *vm) {
-  stack_t *gray_objects = stack_new(8);
+  snek_stack_t *gray_objects = stack_new(8);
   if (gray_objects == NULL) {
     return;
   }
@@ -55,7 +55,7 @@ void trace(vm_t *vm) {
   stack_free(gray_objects);
 }
 
-void trace_blacken_object(stack_t *gray_objects, snek_object_t *ref) {
+void trace_blacken_object(snek_stack_t *gray_objects, snek_object_t *ref) {
   snek_object_t *obj = ref;
 
   switch (obj->kind) {
@@ -79,7 +79,7 @@ void trace_blacken_object(stack_t *gray_objects, snek_object_t *ref) {
   }
 }
 
-void trace_mark_object(stack_t *gray_objects, snek_object_t *obj) {
+void trace_mark_object(snek_stack_t *gray_objects, snek_object_t *obj) {
   if (obj == NULL || obj->is_marked) {
     return;
   }

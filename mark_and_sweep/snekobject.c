@@ -1,9 +1,10 @@
 #include <string.h>
-
+#include "bootlib.h"
 #include "snekobject.h"
 #include "sneknew.h"
 
 void snek_object_free(snek_object_t *obj) {
+  boot_mark_freed(obj);
   switch (obj->kind) {
     case INTEGER:
     case FLOAT:
@@ -17,11 +18,9 @@ void snek_object_free(snek_object_t *obj) {
     case ARRAY: {
       snek_array_t *array = &obj->data.v_array;
       free(array->elements);
-
       break;
     }
   }
-
   free(obj);
 }
 

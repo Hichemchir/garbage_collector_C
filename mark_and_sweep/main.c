@@ -7,7 +7,10 @@
 #include "snekobject.h"
 #include "vm.h"
 
-munit_case(RUN, test_simple, {
+static MunitResult test_simple(const MunitParameter params[], void* data) {
+  (void) params;
+  (void) data;
+  
   vm_t *vm = vm_new();
   frame_t *f1 = vm_new_frame(vm);
 
@@ -16,17 +19,21 @@ munit_case(RUN, test_simple, {
   vm_collect_garbage(vm);
   // nothing should be collected because
   // we haven't freed the frame
-  assert(!boot_is_freed(s));
+  munit_assert(!boot_is_freed(s));
 
   frame_free(vm_frame_pop(vm));
   vm_collect_garbage(vm);
-  assert_true(boot_is_freed(s));
+  munit_assert_true(boot_is_freed(s));
 
   vm_free(vm);
-  assert_true(boot_all_freed());
-});
+  munit_assert_true(boot_all_freed());
+  
+  return MUNIT_OK;
+}
 
-munit_case(SUBMIT, test_full, {
+static MunitResult test_full(const MunitParameter params[], void* data) {
+  (void) params;
+  (void) data;
   vm_t *vm = vm_new();
   frame_t *f1 = vm_new_frame(vm);
   frame_t *f2 = vm_new_frame(vm);
@@ -53,47 +60,50 @@ munit_case(SUBMIT, test_full, {
   frame_reference_object(f2, v);
   frame_reference_object(f3, v);
 
-  assert_int(
-      vm->objects->count,
-      ==,
-      7,
-      "Correct number of objects in the VM before GC"
-  );
+  munit_assert_int(vm->objects->count, ==, 7);
 
   // only free the top frame (f3)
   frame_free(vm_frame_pop(vm));
   vm_collect_garbage(vm);
-  assert_true(boot_is_freed(s3));
-  assert_false(boot_is_freed(s1));
-  assert_false(boot_is_freed(s2));
+  munit_assert_true(boot_is_freed(s3));
+  munit_assert_false(boot_is_freed(s1));
+  munit_assert_false(boot_is_freed(s2));
 
   // VM pass should free the string, but not the vector
   // because its final frame hasn't been freed
   frame_free(vm_frame_pop(vm));
   frame_free(vm_frame_pop(vm));
   vm_collect_garbage(vm);
-  assert_true(boot_is_freed(s1));
-  assert_true(boot_is_freed(s2));
-  assert_true(boot_is_freed(s3));
-  assert_true(boot_is_freed(v));
-  assert_true(boot_is_freed(i1));
-  assert_true(boot_is_freed(i2));
-  assert_true(boot_is_freed(i3));
+  munit_assert_true(boot_is_freed(s1));
+  munit_assert_true(boot_is_freed(s2));
+  munit_assert_true(boot_is_freed(s3));
+  munit_assert_true(boot_is_freed(v));
+  munit_assert_true(boot_is_freed(i1));
+  munit_assert_true(boot_is_freed(i2));
+  munit_assert_true(boot_is_freed(i3));
 
-  assert_int(vm->objects->count, ==, 0, "No live objects remaining");
+  munit_assert_int(vm->objects->count, ==, 0);
 
   vm_free(vm);
-  assert_true(boot_all_freed());
-});
+  munit_assert_true(boot_all_freed());
+  
+  return MUNIT_OK;
+}
 
-int main() {
+int main(int argc, char* argv[MUNIT_ARRAY_PARAM(argc + 1)]) {
   MunitTest tests[] = {
-    munit_test("/test_simple", test_simple),
-    munit_test("/test_full", test_full),
-    munit_null_test,
+    { "/test_simple", test_simple, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL },
+    { "/test_full", test_full, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL },
+    { NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL }
   };
 
-  MunitSuite suite = munit_suite("mark-and-sweep", tests);
+  const MunitSuite suite = {
+    "/mark-and-sweep",
+    tests,
+    NULL,
+    1,
+    MUNIT_SUITE_OPTION_NONE
+  };
 
-  return munit_suite_main(&suite, NULL, 0, NULL);
+  return munit_suite_main(&suite, NULL, argc, argv);
 }

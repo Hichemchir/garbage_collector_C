@@ -4,15 +4,15 @@
 #include "stack.h"
 
 typedef struct VirtualMachine {
-  // stack frames: stack_t frame_t
-  stack_t *frames;
+  // stack frames: snek_stack_t frame_t
+  snek_stack_t *frames;
 
-  // These are the rest of the objects: stack_t snek_object_t
-  stack_t *objects;
+  // These are the rest of the objects: snek_stack_t snek_object_t
+  snek_stack_t *objects;
 } vm_t;
 
 typedef struct StackFrame {
-  stack_t *references;
+  snek_stack_t *references;
 } frame_t;
 
 /// Our main functions for garbage collection.
@@ -23,13 +23,11 @@ void sweep(vm_t *vm);
 void vm_collect_garbage(vm_t *vm);
 
 /// Helper functions for `trace`
-void trace_blacken_object(stack_t *gray_objects, snek_object_t *ref);
-void trace_mark_object(stack_t *gray_objects, snek_object_t *ref);
+void trace_blacken_object(snek_stack_t *gray_objects, snek_object_t *ref);
+void trace_mark_object(snek_stack_t *gray_objects, snek_object_t *ref);
 
 /// This is the function that gets called to actually do the garbage collection,
 /// but is just composed of `mark`, `trace`, and `sweep`.
-///
-/// Don't worry, it's not going to delete your code (hopefully!)
 void vm_collect_garbage(vm_t *vm);
 
 /// Already implemented
